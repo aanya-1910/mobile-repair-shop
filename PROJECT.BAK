@@ -1,0 +1,315 @@
+#include<fstream.h>
+#include<conio.h>
+#include<stdio.h>
+#include<ctype.h>
+#include<process.h>
+#include<string.h>
+
+class shop
+{
+ public :
+	 char name[30] , address[30] , emailid[20] , type , phoneno[15] ;
+	 long double  charge ;
+	 int  nm , uniqueno  ;
+	 static int count;
+};
+class cust : public shop
+{
+  public :
+	 void add_customer() ;
+	 void remove_customer () ;
+	 int  check(int) ;
+	 void modify() ;
+	 void show_records() ;
+	 void service() ;
+	 void total_bill() ;
+	 friend void prvt_info(cust s);
+	 static void s_no()
+	 {
+	  count++;
+	  cout << count;
+	 }
+}  h ;
+int shop :: count;
+
+void cust :: add_customer()
+  {
+   clrscr () ;
+   int t , r ;
+   ofstream hfile("shop.dat",ios :: app | ios :: binary ) ;
+   cout << "\nEnter Customer's details\n" ;
+   cout << "Enter Unique No. for the Customer: " ;
+   cin >> r ;
+   t = check(r) ;
+   if(t==1)
+    cout << "\nSorry....!!!This Unique No. is already taken" ;
+   else
+    {
+     uniqueno = r ;
+     cout << "Enter Customer's Name: " ;
+     gets(name) ;
+     cout << "Enter Customer's Address: "  ;
+     gets(address) ;
+     cout << "Enter Customer's Phone No.: " ;
+     gets(phoneno) ;
+     cout << "Enter Customer's Email ID: " ;
+     gets(emailid) ;
+     service() ;
+     cout << "\nBooking is Completed !!!!!" ;
+     hfile.write((char*)&h,sizeof(h)) ;
+    }
+     hfile.close() ;
+  }
+
+int cust :: check(int r)
+  {
+   int t = 0 ;
+   ifstream hfilt("shop.dat",ios :: binary) ;
+   while(hfilt.read((char*)&h,sizeof(h)) )
+    if(uniqueno == r)
+     {
+      t = 1 ;
+      break ;
+     }
+   hfilt.close() ;
+   return(t) ;
+  }
+
+void cust :: remove_customer()
+  {
+   clrscr() ;
+   int f = 0 , i = 1 , uqno ;
+   cout << "\nEnter Unique No. of Customer you wanna Remove: " ;
+   cin >> uqno ;
+   ifstream hfile1("shop.dat" , ios :: binary ) ;
+   ofstream temp("temp.dat",ios :: app | ios :: binary  )  ;
+   while(hfile1.read((char*)&h,sizeof(h)) )
+    if(uniqueno == uqno)
+    {
+     cout << "\nCustomer with Unique No. "<<uqno<<" is removed from the Record list" ;
+     f = 1 ;
+    }
+    else
+     temp.write((char*)&h,sizeof(h)) ;
+   hfile1.close() ;
+   temp.close() ;
+   remove("shop.dat");
+   rename("temp.dat","shop.dat");
+   if(f==1)
+    {
+     ifstream hfile2("shop.dat" , ios :: binary ) ;
+     gotoxy(13,5) ;   cout << "\n  New Record list after Modification " ;
+     gotoxy(4,9)  ;   cout  <<    "S No."   ;
+     gotoxy(14,9) ;   cout  <<    "Name" ;
+     gotoxy(27,9) ;   cout  <<    "Unique No." ;
+   while(hfile2.read((char*)&h,sizeof(h)))
+    {
+     gotoxy(5,10+i)  ; cout  <<   (i+1)/2  ;
+     gotoxy(14,10+i) ; cout  <<   name ;
+     gotoxy(29,10+i) ; cout  <<   uniqueno ;
+     i+=2 ;
+     getch() ;
+    }
+    hfile2.close() ;
+    }
+   if(f==0)
+    cout << "\nSorry!!! Unique No. doesn't match with our Record" ;
+  }
+
+  void prvt_info(cust s)
+  {
+    clrscr () ;
+    int flag = 0 , uno ;
+    ifstream hf("shop.dat" , ios :: binary ) ;
+    cout << "\nEnter Customer's Unique No. to Show Private Info: " ;
+    cin >> uno ;
+    while(hf.read((char*)&h,sizeof(h)))
+    {
+     if(s.uniqueno == uno)
+
+      {
+       cout << "\Customer is registered in our Record" ;
+       cout << "\n\nUnique No.: " << s.uniqueno ;
+       cout << "\nCustomer's Name: " << s.name ;
+       cout << "\nAddress: " << s.address ;
+       cout << "\nPhone No.: " << s.phoneno ;
+       cout << "\nEmail ID: " << s.emailid ;
+       flag=1;
+       break ;
+      }
+    }
+    if(flag!=1)
+     cout << "\nSorry!!! Unique No. doesn't match with our Record." ;
+    hf.close();
+  }
+
+
+ void cust :: modify()
+   {
+    clrscr() ;
+    int r ;
+    long pos ;
+    int t = 0 ;
+    cout << "\nEnter Unique No. in which you wanna make changes: " ;
+    cin >> r ;
+    fstream file("shop.dat",ios :: in | ios :: out | ios :: binary) ;
+    while(!file.eof())
+    {
+     pos = file.tellg() ;
+     file.read((char*)&h,sizeof(h));
+     if(uniqueno ==  r)
+      {
+       cout << "\nEnter Modified Detail of Customer:::" ;
+       cout << "\nEnter Customer's name: " ;
+       gets(name) ;
+       cout << "Enter Customer's Address: " ;
+       gets(address) ;
+       cout << "Enter Customer's Phone No.: " ;
+       gets(phoneno) ;
+       cout << "Enter Customer's Email ID: " ;
+       gets(emailid) ;
+       file.seekg(pos) ;
+       file.write((char*)&h,sizeof(h)) ;
+       cout << "\nCustomer's Record is Modified. " ;
+       t = 1 ;
+       break ;
+      }
+    }
+     if(!t)
+      cout << "\nSorry!!! Unique No. isn't found !!!!!\n" ;
+     file.close() ;
+   }
+
+void cust :: show_records()
+  {
+   clrscr() ;
+   int i = 1 ;
+   ifstream fil("shop.dat",ios :: binary);
+   cout << " \n \t List of all Records "   ;
+   gotoxy(4,3)  ; cout  <<    "S No."   ;
+   gotoxy(14,3) ; cout  <<    "Name" ;
+   gotoxy(27,3) ; cout  <<    "Unique No." ;
+   while(fil.read((char*)&h,sizeof(h)))
+    {
+     gotoxy(5,5+i)  ; cout  <<  (i+1)/2   ;
+     gotoxy(14,5+i) ; cout  <<  name ;
+     gotoxy(29,5+i) ; cout  <<  uniqueno ;
+     i+=2 ;
+     getch() ;
+    }
+   fil.close() ;
+  }
+
+void cust :: service()
+   {
+	cout << "\n\tDefects and Their Prices" ;
+	cout << "\n\n    Type of Defect                  Prices     " ;
+	cout << "\n D    Display                        5000      " ;
+	cout << "\n S    Speaker                        1000      " ;
+	cout << "\n M    Microphone                     500       " ;
+	cout << "\n W    Wireless Connectivity issue    2000      " ;
+	cout << "\n T    Tempered glass/Screen Guard    2000      " ;
+	cout << "\n B    Battery                        2500      " ;
+
+     cout << "\n\nSelect the Type of Defect: " ;
+     cin >> type ;
+     cout << "Enter Total No of Defected Mobiles you have: " ;
+     cin >> nm ;
+     if(toupper(type) == 'T')
+      charge = 2000 * nm  ;
+     else if(toupper(type) == 'S')
+      charge = 1000 * nm ;
+     else if(toupper(type) == 'D')
+      charge = 5000 * nm ;
+     else if(toupper(type) == 'W')
+      charge = 2000 * nm ;
+     else if(toupper(type) == 'M')
+       charge = 500 * nm ;
+     else if(toupper(type) == 'B')
+       charge = 2500 * nm ;
+     else
+      {
+       cout<< "\nError!!! \nYou have entered Wrong Choice... " ;
+       exit(0) ;
+      }
+   }
+
+void cust :: total_bill()
+  {
+   clrscr() ;
+   int f = 0 ;
+   int rmno ;
+   cout << "\nFor Bill Details Enter Coustomer's Unique No.: " ;
+   cin  >> rmno ;
+   ifstream hfile9("shop.dat" , ios :: binary ) ;
+   while(hfile9.read((char*)&h,sizeof(h)) )
+    if(uniqueno == rmno)
+     {
+      f = 1 ;
+      cout << "\n          -----Mobile Repair Shop-----" ;
+      cout << "\n          Bill Details of Coustomer" ;
+      cout << "\n          Customer name      : "  << name ;
+      cout << "\n          No of Mobiles      : "  << nm  ;
+      cout << "\n          Defect Type        : "  << type  ;
+      cout << "\n          Defect's charge    : "  << charge ;
+      cout << "\n          Service tax (5%)   : "  << charge * 0.05  ;
+      cout << "\n          Total amount       : "  << charge + (charge * 0.05)  ;
+     }
+     if(!f)
+     cout << "\nSorry!!! Unique No. doesn't match to our Record!!!!! " ;
+  }
+
+void main ()
+   {
+    clrscr () ;
+    int choice ;
+    char ch ;
+    do
+     {
+      clrscr() ;
+      gotoxy(10,2) ; cout << " Welcome to Mobile Repair Shop" ;
+      cout << "\n\nMAIN MENU\nPress for \n"
+	    << " 1. To Show list of Records \n"
+	    << " 2. To Add Customer \n"
+	    << " 3. To Remove Customer \n"
+	    << " 4. To Show Customer's Private Information \n"
+	    << " 5. To Modify Records \n"
+	    << " 6. To Show the Total Bill    \n"
+	    << " 0. To Exit the program \n" ;
+      cout << "\nEnter Your Choice: " ;
+      cin >> choice ;
+      switch(choice)
+       {
+	  case 1 :
+		 h.show_records() ;
+		 break ;
+	  case 2 :
+		 h.add_customer() ;
+		 break ;
+	  case 3 :
+		 h.remove_customer() ;
+		 break ;
+	  case 4 :
+		 prvt_info(h) ;
+		 break ;
+	  case 5 :
+		 h.modify() ;
+		 break ;
+	  case 6 :
+		 h.total_bill() ;
+		 break ;
+	  case 0 :
+		  exit(0);
+		  break ;
+
+	  default :
+		  cout << "\nYou have Entered Wrong Choice!!! " ;
+
+	}
+	 cout << "\n\nFor Main Menu type 'Y': " ;
+	 cin >> ch ;
+     }
+       while(toupper(ch) == 'Y') ;
+       getch() ;
+   }
+
